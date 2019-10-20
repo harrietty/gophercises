@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"github.com/harrietty/gophercises/urlshortener"
 )
 
 // Types must be declared outside of functions
@@ -37,9 +38,18 @@ func main() {
 	// Handle expects a struct that implements the handler interface
 	mux.Handle("/time", timeHandler{format: time.RFC1123})
 
+	// Build the MapHandler using the mux as the fallback
+	pathsToUrls := map[string]string{
+		"/urlshort-godoc": "https://godoc.org/github.com/gophercises/urlshort",
+		"/yaml-godoc":     "https://godoc.org/gopkg.in/yaml.v2",
+		"/twitter": "https://twitter.com",
+	}
+	mapHandler := urlshortener.MapHandler(pathsToUrls, mux)
+
 	log.Println("Starting the server on :8080")
 
-	http.ListenAndServe(":8080", mux)
+	// Needs to be passed something which implements ServeHTTP
+	http.ListenAndServe(":8080", mapHandler)
 }
 
 func hello (w http.ResponseWriter, r *http.Request) {
