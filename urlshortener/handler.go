@@ -16,8 +16,6 @@ import (
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
 	// If the map includes the URL we care about, redirect
 	return func (w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s: %s\n", r.Method, r.URL)
-
 		redirectPath, ok := pathsToUrls[r.URL.Path]
 		if !ok {
 			fallback.ServeHTTP(w, r)
@@ -65,9 +63,11 @@ func YamlHandler(filename string, fallback http.Handler) http.HandlerFunc {
 	mapOfPaths := createMap(yamlStuct.Paths)
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s: %s\n", r.Method, r.URL)
 		redirectPath, ok := mapOfPaths[r.URL.Path]
 		if !ok {
 			fallback.ServeHTTP(w, r)
+			return
 		}
 
 		http.Redirect(w, r, redirectPath, http.StatusPermanentRedirect)
