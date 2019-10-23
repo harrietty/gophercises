@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"flag"
 	"github.com/harrietty/gophercises/urlshortener"
 )
 
@@ -29,6 +30,9 @@ func (th timeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	yamlFileName := flag.String("f", "paths.yaml", "The name of the YAML file where shortened URLS are mapped")
+	flag.Parse()
+
 	mux := http.NewServeMux()
 	
 	// HandleFunc expects a function with (w http.ResponseWriter, r *http.Request) sig
@@ -46,7 +50,7 @@ func main() {
 	}
 	mapHandler := urlshortener.MapHandler(pathsToUrls, mux)
 
-	yamlHandler := urlshortener.YamlHandler(mapHandler)
+	yamlHandler := urlshortener.YamlHandler(*yamlFileName, mapHandler)
 
 	log.Println("Starting the server on :8080")
 

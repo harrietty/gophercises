@@ -60,8 +60,8 @@ func createMap(paths []Path) map[string]string {
 	return m
 }
 
-func YamlHandler(fallback http.Handler) http.HandlerFunc {
-	yamlStuct := parseYaml("paths.yaml")
+func YamlHandler(filename string, fallback http.Handler) http.HandlerFunc {
+	yamlStuct := parseYaml(filename)
 	mapOfPaths := createMap(yamlStuct.Paths)
 
 	return func(w http.ResponseWriter, r *http.Request) {
