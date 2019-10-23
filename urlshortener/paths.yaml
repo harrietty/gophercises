@@ -1,0 +1,7 @@
+paths:
+  - path: /mdn
+    url: https://developer.mozilla.org/en-US/
+  - path: /repl
+    url: https://repl.it/languages
+  - path: /yaml-doc
+    url: https://godoc.org/gopkg.in/yaml.v2

@@ -3,6 +3,8 @@ package urlshortener
 import (
 	"net/http"
 	"log"
+	"io/ioutil"
+	"gopkg.in/yaml.v2"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -22,6 +24,52 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 			return
 		}
 		
+		http.Redirect(w, r, redirectPath, http.StatusPermanentRedirect)
+	}
+}
+
+type Path struct {
+	Path string
+	Url string
+}
+
+type Paths struct {
+	Paths []Path `yaml:"paths"`
+}
+
+func parseYaml(filename string) Paths {
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Printf("Error reading %s #%v ",filename, err)
+	}
+
+	var p Paths
+	err = yaml.Unmarshal(yamlFile, &p)
+	if err != nil {
+			log.Fatalf("Unmarshal: %v", err)
+	}
+
+	return p
+}
+
+func createMap(paths []Path) map[string]string {
+	m := make(map[string]string)
+	for _, val := range paths {
+		m[val.Path] = val.Url
+	}
+	return m
+}
+
+func YamlHandler(fallback http.Handler) http.HandlerFunc {
+	yamlStuct := parseYaml("paths.yaml")
+	mapOfPaths := createMap(yamlStuct.Paths)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		redirectPath, ok := mapOfPaths[r.URL.Path]
+		if !ok {
+			fallback.ServeHTTP(w, r)
+		}
+
 		http.Redirect(w, r, redirectPath, http.StatusPermanentRedirect)
 	}
 }
