@@ -3,9 +3,12 @@ package urlshortener
 import (
 	"net/http"
 	"log"
+	"fmt"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"encoding/json"
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -107,5 +110,38 @@ func JsonHandler(filename string, fallback http.Handler) http.HandlerFunc {
 		}
 
 		http.Redirect(w, r, pathFromMap, http.StatusPermanentRedirect)
+	}
+}
+
+func DbHandler(fallback http.Handler) http.HandlerFunc {
+	db, err := sql.Open("sqlite3", "./urlmap.db")
+	if err != nil {
+		log.Printf("Unable to open DB: %v\n", err)
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s: %s\n", r.Method, r.URL)
+		row := db.QueryRow("SELECT * FROM paths where path=$1", r.URL.Path)
+
+		var id int
+		var path string
+		var url string
+		err := row.Scan(&id, &path, &url)
+		if err == sql.ErrNoRows {
+			fallback.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			handleErr(err)
+			fallback.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, url, http.StatusPermanentRedirect)
+	}
+}
+
+func handleErr(err interface{}) {
+	if err != nil {
+		fmt.Printf("Database DB: %v\n", err)
 	}
 }

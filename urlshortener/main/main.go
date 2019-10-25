@@ -30,14 +30,7 @@ func (th timeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("The time is: " + tm))
 }
 
-func main() {
-	// db, err := sql.Open("sqlite3", "./foo.db")
-	// if err != nil {
-	// 	log.Printf("Error opening sqlite3: %v", err)
-	// }
-	// db.Prepare("")
-
-	
+func main() {	
 	yamlFileName := flag.String("f", "paths.yaml", "The name of the YAML file where shortened URLS are mapped")
 	shouldSeed := flag.Bool("s", false, "Whether or not the seed file should be executed")
 	
@@ -66,7 +59,9 @@ func main() {
 
 	yamlHandler := urlshortener.YamlHandler(*yamlFileName, mapHandler)
 
-	jsonHandler := urlshortener.JsonHandler("paths.json", yamlHandler)
+	dbHandler := urlshortener.DbHandler(yamlHandler)
+
+	jsonHandler := urlshortener.JsonHandler("paths.json", dbHandler)
 
 	log.Println("Starting the server on :8080")
 
