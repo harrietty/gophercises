@@ -11,11 +11,20 @@ func SeedDB() {
 	if err != nil {
 		fmt.Printf("Error opening sqlite3: %v\n", err)
 	}
-	
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS paths (id integer primary key autoincrement, path varchar(255), url varchar(500))")
+
+	statement, err := db.Prepare("DROP TABLE IF EXISTS paths")
 	statement.Exec()
-	fmt.Println("Created table paths")
 	handleErr(err)
+	if err == nil {
+		fmt.Println("Dropped existing table paths")
+	}
+	
+	statement, err = db.Prepare("CREATE TABLE paths (id integer primary key autoincrement, path varchar(255), url varchar(500))")
+	statement.Exec()
+	handleErr(err)
+	if err == nil {
+		fmt.Println("Created table paths")
+	}
 
 	statement, err = db.Prepare("insert into paths (path, url) values (?, ?), (?, ?)")
 	_, err = statement.Exec("/mice", "https://en.wikipedia.org/wiki/Mouse", "/bats", "https://www.bats.org.uk/about-bats")
