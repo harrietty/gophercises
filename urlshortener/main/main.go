@@ -52,10 +52,12 @@ func main() {
 
 	yamlHandler := urlshortener.YamlHandler(*yamlFileName, mapHandler)
 
+	jsonHandler := urlshortener.JsonHandler("paths.json", yamlHandler)
+
 	log.Println("Starting the server on :8080")
 
 	// Needs to be passed something which implements ServeHTTP
-	http.ListenAndServe(":8080", yamlHandler)
+	http.ListenAndServe(":8080", jsonHandler)
 }
 
 func hello (w http.ResponseWriter, r *http.Request) {

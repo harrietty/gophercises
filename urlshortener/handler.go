@@ -5,6 +5,7 @@ import (
 	"log"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
+	"encoding/json"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -33,6 +34,10 @@ type Path struct {
 
 type Paths struct {
 	Paths []Path `yaml:"paths"`
+}
+
+type JsonPaths struct {
+	Paths []Path
 }
 
 func parseYaml(filename string) Paths {
@@ -71,5 +76,36 @@ func YamlHandler(filename string, fallback http.Handler) http.HandlerFunc {
 		}
 
 		http.Redirect(w, r, redirectPath, http.StatusPermanentRedirect)
+	}
+}
+
+func parseJson(filename string) JsonPaths {
+	jsonFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Printf("Error reading %s #%v", filename, err)
+	}
+
+	var jsonPaths JsonPaths
+	err = json.Unmarshal(jsonFile, &jsonPaths)
+	if err != nil {
+		log.Printf("Error unmarshalling JSON: %v", err)
+	}
+
+	return jsonPaths
+}
+
+func JsonHandler(filename string, fallback http.Handler) http.HandlerFunc {
+	jsonStruct := parseJson(filename)
+	jsonMap := createMap(jsonStruct.Paths)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s: %s\n", r.Method, r.URL)
+		pathFromMap, ok := jsonMap[r.URL.Path]
+		if !ok {
+			fallback.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, pathFromMap, http.StatusPermanentRedirect)
 	}
 }
