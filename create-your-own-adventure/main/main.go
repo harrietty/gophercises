@@ -4,7 +4,13 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"log"
+	"net/http"
+	"html/template"
 )
+
+var tpl = template.Must(template.ParseFiles("./assets/index.html"))
+
+var storyData Story = parseJson("story.json")
 
 type Story map[string]Arc
 
@@ -19,7 +25,7 @@ type Arc struct {
 	Options []Option `json:"options"`
 }
 
-func parseJson(filename string) {
+func parseJson(filename string) Story {
 	jsonStr, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Printf("Error parsing JSON: %v\n", err)
@@ -28,9 +34,23 @@ func parseJson(filename string) {
 	var story Story
 	json.Unmarshal(jsonStr, &story)
 
-	log.Println(story)
+	return story
 }
 
 func main() {
-	parseJson("story.json")
+	mux := http.NewServeMux()
+
+	// Handle static assets
+	staticFileDirectory := http.Dir("./assets/")
+	fs := http.FileServer(staticFileDirectory)
+	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
+
+	mux.HandleFunc("/", indexHandler)
+
+	log.Printf("Running on port 8080\n")
+	http.ListenAndServe(":8080", mux)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	tpl.Execute(w, storyData["intro"])
 }
