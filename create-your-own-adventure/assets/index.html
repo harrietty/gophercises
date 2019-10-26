@@ -12,10 +12,16 @@
     {{ range.Paragraphs }}
     <p>{{ . }}</p>
     {{ end }}
+    {{ if .Options }}
     <h4>What do you want to do next?</h4>
+    {{ else }}
+    <a href="/">
+      <button>Start again</button>
+    </a>
+    {{ end }}
     <div class="opts-container">
       {{ range.Options }}
-      <a href="/{{ .Arc }}">
+      <a href="/arcs/{{ .Arc }}">
         <button>{{ .Text }}</button>
       </a>
       {{ end }}

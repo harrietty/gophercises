@@ -46,11 +46,18 @@ func main() {
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	mux.HandleFunc("/", indexHandler)
+	mux.HandleFunc("/arcs/", arcHandler)
 
 	log.Printf("Running on port 8080\n")
 	http.ListenAndServe(":8080", mux)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf(r.URL.Path)
 	tpl.Execute(w, storyData["intro"])
+}
+
+func arcHandler(w http.ResponseWriter, r *http.Request) {
+	arc := r.URL.Path[len("/arcs/"):]
+	tpl.Execute(w, storyData[arc])
 }
